@@ -1,0 +1,243 @@
+﻿@page "/"
+@using MAGestionale.Authentication
+@using MAGestionaleV2.Models
+@using MAGestionale.Security
+@using MAGestionale.Services
+@inject DBService userService
+@inject IJSRuntime js
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager navManager
+
+<PageTitle>HOME</PageTitle>
+<section class="">
+	<AuthorizeView>
+		<Authorized>
+			Benvenuto
+		</Authorized>
+		<NotAuthorized>
+			@if (alert)
+			{
+				<div class="@AlertClass" role="alert">
+					@AlertMessage
+				</div>
+			}
+			<!-- Jumbotron -->
+			<div class="px-4 py-5 px-md-5 text-center text-lg-start" style="background-color: hsl(0, 0%, 96%)">
+				<div class="container">
+					<div class="row gx-lg-5 align-items-center">
+						<div class="col-lg-6 mb-5 mb-lg-0">
+							<h1 class="my-5 display-3 fw-bold ls-tight">
+								Il migliore sito<br />
+								<span class="text-primary">per il tuo business</span>
+							</h1>
+							<p style="color: hsl(217, 10%, 50.8%)">
+								Accedi al nostro sito per iniziare a vendere i tuoi
+								oggetti e scopri subito come vendere prodotti in
+								modo facile veloce e sicuro
+							</p>
+						</div>
+
+						<div class="col-lg-6 mb-5 mb-lg-0">
+							<div class="card">
+								<div class="card-body py-5 px-md-5">
+									<!-- 2 column grid layout with text inputs for the first and last names -->
+									@if (LRSelect)
+									{
+										<h5 class="my-1 display-2 fw-bold ls-tight d-flex justify-content-center">LOGIN</h5>
+										<div class="p-3 btn-group btn-group-toggle d-flex justify-content-center" data-toggle="buttons">
+											<button type="radio" class="btn btn-primary" @onclick="GoToRegister">Non sei ancora Registrato? clicca qui</button>
+										</div>
+										<!-- Email input -->
+										<div class="form-outline mb-4">
+											<input type="email" placeholder="Email" @bind-value="userLogin.email" id="form3Example3" class="form-control" />
+										</div>
+										<!-- Password input -->
+										<div class="form-outline mb-4">
+											<input type="password" placeholder="Password" @bind-value="userLogin.Password" id="form3Example4" class="form-control" />
+										</div>
+										<!-- Submit button -->
+										<button @onclick="Authenticate" type="submit" class="btn btn-primary btn-block mb-4">
+											Login
+										</button>
+									}
+									else
+									{
+										<h5 class="my-1 display-2 fw-bold ls-tight d-flex justify-content-center">REGISTER</h5>
+										<div class="p-3 btn-group btn-group-toggle d-flex justify-content-center" data-toggle="buttons">
+											<button type="radio" class="btn btn-primary" @onclick="GoToLogin">Sei Registrato? clicca qui</button>
+										</div>
+										<!-- Email input -->
+										<div class="form-outline mb-4">
+											<input type="email" placeholder="Email" @bind-value="user.Email" id="form3Example3" class="form-control" />
+										</div>
+										<!-- Username input -->
+										<div class="form-outline mb-4">
+											<input type="email" placeholder="Username" @bind-value="user.Username" id="form3Example3" class="form-control" />
+										</div>
+										<!-- Name input -->
+										<div class="form-outline mb-4">
+											<input type="email" placeholder="Nome" @bind-value="user.Name" id="form3Example3" class="form-control" />
+										</div>
+										<!-- Surname input -->
+										<div class="form-outline mb-4">
+											<input type="email" placeholder="Cognome" @bind-value="user.Surname" id="form3Example3" class="form-control" />
+										</div>
+										<!-- Password input -->
+										<div class="form-outline mb-4">
+											<input type="password" placeholder="Password" @bind-value="user.Password" id="form3Example4" class="form-control" />
+										</div>
+										<!-- Confirm Password input -->
+										<div class="form-outline mb-4">
+											<input type="password" placeholder="Conferma Password" @bind-value="Password2" id="form3Example4" class="form-control" />
+										</div>
+										<!-- Submit button -->
+										<button @onclick="RegisterUser" type="submit" class="btn btn-primary btn-block mb-4">
+											Registra
+										</button>
+									}
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</NotAuthorized>
+	</AuthorizeView>
+	<!-- Jumbotron -->
+</section>
+@code {
+	bool alert = false;
+	MarkupString AlertMessage = new MarkupString("<strong></strong>");
+	string AlertClass = "alert alert-info";
+	bool LRSelect = true;
+
+	public class UserLogin
+	{
+		public string email { get; set; }
+		public string Password { get; set; }
+	}
+	UserLogin userLogin = new UserLogin();
+
+	public async Task Authenticate()
+	{
+		alert = true;
+		var userAccount = await userService.GetUserByEmail(userLogin.email);
+
+		if (userAccount is not null)
+		{
+			try
+			{
+				if (userAccount.Password == Tools.ComputeMd5Hash(userLogin.Password))
+				{
+					if (!userAccount.IsBlocked)
+					{
+						var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
+						await customAuthStateProvider.UpdateAuthenticationState(new UserSession
+							{
+								Username = userAccount.Username,
+								Role = userAccount.Role
+							});
+						navManager.NavigateTo("/", true);
+					}
+					else
+					{
+						SetAlert("alert alert-danger", "oi oi-ban", $"<strong>UTENTE BLOCCATO</strong>");
+					}
+				}
+				else
+				{
+					SetAlert("alert alert-danger", "oi oi-ban", $"Campo <strong>PASSOWORD</strong> non valido");
+				}
+			}
+			catch
+			{
+				SetAlert("alert alert-danger", "oi oi-ban", $"Campo <strong>PASSOWORD</strong> non valido");
+
+			}
+		}
+		else
+		{
+			SetAlert("alert alert-danger", "oi oi-ban", $"Campo <strong>EMAIL</strong> non valido");
+		}
+	}
+	private async Task GoToRegister()
+	{
+		LRSelect = false;
+		alert = false;
+	}
+	private async Task GoToLogin()
+	{
+		alert = false;
+		LRSelect = true;
+	}
+
+	User user = new()
+		{
+			Email = string.Empty,
+			Name = string.Empty,
+			Username = string.Empty,
+			Surname = string.Empty,
+			Password = string.Empty,
+		};
+	string Password2 = string.Empty;
+	private async Task RegisterUser()
+	{
+		alert = true;
+
+		if (Tools.EmailValidator(user.Email) && await userService.GetUserByEmail(user.Email) is null)
+		{
+			if (user.Username.Trim().Length > 5 && await userService.GetUserByUsername(user.Username) is null)
+			{
+				if (user.Password == Password2 && Password2.Trim().Length > 7)
+				{
+					if (user.Name != string.Empty)
+					{
+						if (user.Surname != string.Empty)
+						{
+							user.Role = "User";
+							user.IsBlocked = false;
+							user.Password = Tools.ComputeMd5Hash(Password2);
+							await userService.RegisterUser(user);
+							SetAlert("alert alert-success", "oi oi-check", $"Accesso eseguito con successo.");
+							await Task.Delay(1000);
+							alert = false;
+							navManager.NavigateTo("/", true);
+
+						}
+						else
+						{
+						
+
+							SetAlert("alert alert-danger", "oi oi-ban", $"Campo <strong>COGNOME</strong> Obbligatorio");
+						}
+					}
+					else
+					{
+						SetAlert("alert alert-danger", "oi oi-ban", $"Campo <strong>NOME</strong> Obbligatorio");
+
+					}
+				}
+				else
+				{
+					SetAlert("alert alert-danger", "oi oi-ban", $"Campo <strong>PASSWORD</strong> deve essere almeno 8 caratteri");
+				}
+			}
+			else
+			{
+				SetAlert("alert alert-danger", "oi oi-ban", $"Campo <strong>USERNAME </strong>NON VALIDO, GIA ESISTENTE O TROPPO CORTO (5 CARATTERI ALMENO)");
+
+			}
+		}
+		else
+		{
+			SetAlert("alert alert-danger", "oi oi-ban", $"Campo <strong>EMAIL</strong>Non valido o già esistente");
+		}
+
+
+	}
+	private void SetAlert(string alertClass, string iconClass, string message)
+	{
+		AlertClass = alertClass;
+		AlertMessage = new MarkupString($"<span class='{iconClass}' aria-hidden='true'></span> {message}");
+	}
+}

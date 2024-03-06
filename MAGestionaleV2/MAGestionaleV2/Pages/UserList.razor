@@ -1,0 +1,59 @@
+﻿@page "/UserList"
+@using MAGestionaleV2.Models
+@using MAGestionale.Services
+@attribute [Authorize(Roles = "Admin")]
+@inject DBService userService
+<PageTitle>LISTA UTENTI</PageTitle>
+<table class="table table-bordered">
+	<tr>
+		<th scope="col">Username</th>
+		<th scope="col">Email</th>
+		<th scope="col">Nome</th>
+		<th scope="col">Cognome</th>
+		<th scope="col">Azioni</th>
+	</tr>
+	@if (users is not null)
+	{
+		foreach (User u in users)
+		{
+			<tr>
+				<td>@u.Username</td>
+				<td>@u.Email</td>
+				<td>@u.Name</td>
+				<td>@u.Surname</td>
+				<td>
+					<div class="btn-group btn-group-toggle" data-toggle="buttons">
+						@if (u.IsBlocked)
+						{
+							<button type="radio" style="width:10rem" class="btn-danger" @onclick="() => userService.UnblockUser(u)">Sblocca Utente</button>
+						}
+						else
+						{
+							<button type="radio" style="width:10rem" class="btn-danger" @onclick="() => userService.BlockUser(u)">Blocca Utente</button>
+						}
+						@if (u.Role == "User")
+						{
+							<button type="radio" style="width:10rem" class="btn-success" @onclick="() => userService.SetSeller(u)">Rendi Venditore</button>
+						}
+						else
+						{
+							<button type="radio" style="width:10rem" class="btn-success" @onclick="() => userService.SetUser(u)">Rendi Utente</button>
+						}
+					</div>
+				</td>
+			</tr>
+
+		}
+	}
+</table>
+
+@code
+{
+	List<User> users = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		users = await userService.GetAllUsersAndSellers();
+	}
+
+}

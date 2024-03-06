@@ -1,0 +1,69 @@
+﻿<Bar Breakpoint="Breakpoint.Desktop" NavigationBreakpoint="Breakpoint.Tablet" ThemeContrast="ThemeContrast.Dark"
+     Mode="BarMode.VerticalInline" CollapseMode="BarCollapseMode.Small">
+    <BarToggler />
+    <BarBrand>
+        <BarItem>
+            <BarLink To="">
+                <BarIcon IconName="IconName.ShoppingBag"/>
+                 MAGestionaleV2
+            </BarLink>
+        </BarItem>
+    </BarBrand>
+    <BarMenu>
+        <BarStart>
+            <AuthorizeView Roles="Admin">
+                <BarItem>
+                    <BarDropdown>
+                        <BarDropdownToggle>
+                            <BarIcon IconName="IconName.Dashboard" />
+                            Amministrazione
+                        </BarDropdownToggle>
+                        <BarDropdownMenu>
+                            
+                            <BarDropdownItem To="/UserLIst">
+                                <BarIcon IconName="IconName.UserCheck" />
+                                Azioni Utenti
+                            </BarDropdownItem>
+                        </BarDropdownMenu>
+                    </BarDropdown>
+                </BarItem>
+            </AuthorizeView>
+            <AuthorizeView Roles="Admin,Seller">
+                <BarItem>
+                    <BarDropdown>
+                        <BarDropdownToggle>
+                            <BarIcon IconName="IconName.MoneyBillAlt" />
+                            Pannello Venditore
+                        </BarDropdownToggle>
+                        <BarDropdownMenu>
+                            <BarDropdownItem To="/SellingStatistics">
+                                <BarIcon IconName="IconName.ChartPie" />
+                                Statistiche Prodotti
+                            </BarDropdownItem>
+                            <BarDropdownItem To="/AddProduct">
+                                <BarIcon IconName="IconName.CartPlus" />
+                                Aggiungi Prodotto
+                            </BarDropdownItem>
+                        </BarDropdownMenu>
+                    </BarDropdown>
+                </BarItem>
+            </AuthorizeView>
+            <AuthorizeView Roles="Admin,Seller,User">
+                <BarItem>
+                    <BarLink To="/Cart">
+                        <BarIcon IconName="IconName.ShoppingCart" />
+                        Carrello
+                    </BarLink>
+                </BarItem>   
+                <BarItem>
+                    <BarLink To="/Products">
+                        <BarIcon IconName="IconName.Store" />
+                        Dashboard
+                    </BarLink>
+                </BarItem>
+            </AuthorizeView>
+        </BarStart>
+        <BarEnd>
+        </BarEnd>
+    </BarMenu>
+</Bar>
