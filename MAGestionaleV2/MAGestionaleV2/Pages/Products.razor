@@ -1,6 +1,7 @@
 ﻿@page "/Products"
 @inject DBService productsService
 @inject NavigationManager navManager
+@using MAGestionale.Models
 @using MAGestionale.Security
 @using MAGestionale.Services
 @using MAGestionaleV2.Models
@@ -12,7 +13,7 @@
     {
         if (p.IsVisible)
         {
-            <Card>
+        <Card>
                 <CardImage Height=Height.Is50 Width=Width.Is100 Source="@Tools.PathToURL(p.ImagePath)"></CardImage>
                 <CardBody>
                     <CardTitle Size="5">@p.Name.ToUpper()</CardTitle>
@@ -44,29 +45,29 @@
             </Card>
             <Card>
                 <CardImage Height=Height.Is50 Width=Width.Is100 Source="@Tools.PathToURL(p.ImagePath)"></CardImage>
-                <CardBody>
-                    <CardTitle Size="5">@p.Name.ToUpper()</CardTitle>
-                    <CardText>
-                        @p.Description
-                    </CardText>
-                    <Button Color="Color.Primary" @onclick="()=>Detail(p)">Dettagli</Button>
-                </CardBody>
-            </Card>
-        }
+            <CardBody>
+                <CardTitle Size="5">@p.Name.ToUpper()</CardTitle>
+                <CardText>
+                    @p.Description
+                </CardText>
+                <Button Color="Color.Primary" @onclick="()=>Detail(p)">Dettagli</Button>
+            </CardBody>
+        </Card>
+    }
     }
 </CardDeck>
 @code
 {
-    List<Product> products = new();
+	List<Product> products = new();
 
-    protected override async Task OnInitializedAsync()
-    {
-        products = await productsService.GetAllProducts();
-    }
+	protected override async Task OnInitializedAsync()
+	{
+		products = await productsService.GetAllProducts();
+	}
 
-    private async Task Detail(Product product)
-    {
-        navManager.NavigateTo($"/Details?IdProduct={product.ID}");
-    }
+	private async Task Detail(Product product)
+	{
+		navManager.NavigateTo($"/Details?IdProduct={product.ID}");
+	}
 
 }

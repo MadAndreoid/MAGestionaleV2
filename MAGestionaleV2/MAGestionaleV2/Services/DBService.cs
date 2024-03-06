@@ -44,8 +44,8 @@ namespace MAGestionale.Services
 			{
 				x.IsBlocked = true;
 			}
-			await _context.SaveChangesAsync();
-		}
+            await _context.SaveChangesAsync();
+        }
 		public async Task UnblockUser(User user)
 		{
 			var x = await _context.Users.FirstOrDefaultAsync(u => u.Username == user.Username);
@@ -53,8 +53,8 @@ namespace MAGestionale.Services
 			{
 				x.IsBlocked = false;
 			}
-			await _context.SaveChangesAsync();
-		}
+            await _context.SaveChangesAsync();
+        }
 
 		public async Task SetSeller(User user)
 		{
@@ -74,7 +74,7 @@ namespace MAGestionale.Services
 			{
 				x.Role = "User";
 			}
-			await _context.SaveChangesAsync(); ;
+            await _context.SaveChangesAsync(); ;
 		}
 
 		public async Task<User> GetSellerByID(long userid)
@@ -91,7 +91,7 @@ namespace MAGestionale.Services
 		}
 		public async Task<List<Product>> GetAllProducts()
 		{
-			return await _context.Products.ToListAsync();
+            return await _context.Products.ToListAsync();
 		}
 		public async Task AddNewProduct(Product product)
 		{
@@ -125,11 +125,11 @@ namespace MAGestionale.Services
 			await _context.SaveChangesAsync();
 		}
 
-		#endregion
+        #endregion
 
-		#region [BUYREQUESTS]
+        #region [BUYREQUESTS]
 
-		public async Task NewBuyRequest(BuyRequest buyRequest)
+        public async Task NewBuyRequest(BuyRequest buyRequest)
 		{
 			await _context.BuyRequests.AddAsync(buyRequest);
 			await _context.SaveChangesAsync();
@@ -141,14 +141,14 @@ namespace MAGestionale.Services
 		}
 		public async Task<bool> NotBuyed(long userid, long productid)
 		{
-			return await _context.BuyRequests.FirstOrDefaultAsync(b => b.IDbuyer == userid && b.IDproduct == productid) is null ? true : false;
+			return await _context.BuyRequests.FirstOrDefaultAsync(b => b.IDbuyer == userid && b.IDproduct == productid) is null ? true : false;				
 		}
 
 		public async Task<List<BuyRequest>> GetRequestBySeller(long userid)
 		{
 			var x = await GetProductsBySeller(userid);
 			List<BuyRequest> requests = new();
-
+			
 			foreach (Product p in x)
 			{
 				var y = await _context.BuyRequests.Where(b => b.IDproduct == p.ID).ToListAsync();
