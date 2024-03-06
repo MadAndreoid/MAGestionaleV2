@@ -1,0 +1,40 @@
+﻿@page "/Cart"
+@attribute [Authorize(Roles = "Admin,User,Seller")]
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager navManager
+@inject DBService dbService
+@using MAGestionale.Authentication
+@using MAGestionale.Models
+@using MAGestionale.Security
+@using MAGestionale.Services
+<PageTitle>I MIEI ORDINI</PageTitle>
+<div class="row">
+	@foreach (Product p in products)
+	{
+		<div class="card" style="width: 12rem;height: 17rem">
+			<div class="card-body">
+				<img style="width: 7rem;height: 7rem" class="card-img-top" src="@Tools.PathToURL(p.ImagePath)" />
+				<h5 class="card-title">@p.Name.ToUpper()</h5>
+				<h6 class="card-subtitle mb-2 text-muted">Prezzo: @String.Format("{0:0.00}", p.Price)€</h6>
+				<p class="card-text">@p.Description</p>
+				<button class="btn btn-primary" @onclick="()=>Detail(p)">Dettagli</button>
+			</div>
+		</div>
+	}
+</div>
+@code
+{
+	List<Product> products = new();
+	protected override async Task OnInitializedAsync()
+	{
+		var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
+		var x = await customAuthStateProvider.GetAuthenticationStateAsync();
+		var y = await dbService.GetUserByUsername(x.User.Identity.Name);
+		products = await dbService.GetProductsByBuyer((y.ID));
+	}
+	private async Task Detail(Product product)
+	{
+		navManager.NavigateTo($"/Details?IdProduct={product.ID}");
+	}
+
+}

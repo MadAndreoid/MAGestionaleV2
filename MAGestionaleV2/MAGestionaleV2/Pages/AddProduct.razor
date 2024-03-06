@@ -1,0 +1,166 @@
+﻿@page "/addproduct"
+@attribute [Authorize(Roles = "Admin,Seller")]
+@inject DBService dbService
+@inject IJSRuntime js
+@inject NavigationManager navManager
+@inject AuthenticationStateProvider authStateProvider
+@inject IWebHostEnvironment env
+@using MAGestionale.Authentication
+@using MAGestionale.Models
+@using MAGestionale.Security
+@using MAGestionale.Services
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
+
+
+<PageTitle>NUOVO PRODOTTO</PageTitle>
+<div class="@AlertClass" role="alert">
+	@AlertMessage
+</div>
+
+<div class="progress mb-3" style="height: 20px;">
+	<div class="progress-bar" role="progressbar" style="width: @ProgressPercentage%;" aria-valuenow="@ProgressPercentage" aria-valuemin="0" aria-valuemax="100">@ProgressPercentage% Complete</div>
+</div>
+<div class="row">
+	<div class="col-lg-4 offset-lg-4 pt-4 border">
+		<div class="mb-3">
+			<label class="form-label">Nome Prodotto:</label>
+			<input type="text" class="form-control" @bind-value="@product.Name" aria-describedby="emailHelp" required>
+		</div>
+		<div class="mb-3">
+			<label class="form-label">Descrizione:</label>
+			<textarea class="form-control" @bind="product.Description" required></textarea>
+		</div>
+		<div class="mb-3">
+			<label class="form-label">Prezzo:</label>
+			<input type="number" class="form-control" @bind="product.Price" required></input>
+		</div>
+		<div class="input-group mb-3 p">
+			<InputFile @key=@(inputFileId) class="form-control" id="inputFile" OnChange="OnInputFileChange" aria-describedby="uploadButton" required />
+			<button class="btn btn-primary" type="submit" id="uploadButton" @onclick="OnSubmit" disabled="@IsUploadDisabled">
+				<span class="oi oi-cloud-upload" aria-hidden="true"></span> Carica Immagine
+			</button>
+		</div>
+		<div class="invalid-feedback">
+			Seleziona foto da caricare.
+		</div>
+	</div>
+</div>
+
+@code
+{
+	MarkupString AlertMessage = new MarkupString("<strong>Nessun immagine selezionata</strong>");
+	string AlertClass = "alert alert-info";
+	int ProgressPercentage = 0;
+	IBrowserFile selectedFile;
+	long maxFileSize = 1024L * 1024L * 5L;
+	string[] allowedExtensions = { ".png", ".jpeg", ".gif", ".jpg" };
+	bool IsUploadDisabled = true;
+	private Guid inputFileId = Guid.NewGuid();
+
+	bool validfile = false;
+	Product product = new();
+	protected override async Task OnInitializedAsync()
+	{
+		product.Name = string.Empty;
+		product.Description = string.Empty;
+	}
+
+	private void OnInputFileChange(InputFileChangeEventArgs e)
+	{
+		selectedFile = e.GetMultipleFiles()[0];
+		ProgressPercentage = 0;
+		IsUploadDisabled = true;
+
+		if (selectedFile.Size > maxFileSize)
+		{
+			SetAlert("alert alert-danger", "oi oi-ban", $"La foto supera la grandezza massima <strong>{maxFileSize / (1024 * 1024)} MB</strong>.");
+			return;
+		}
+
+		if (!allowedExtensions.Contains(Path.GetExtension(selectedFile.Name).ToLowerInvariant()))
+		{
+			SetAlert("alert alert-danger", "oi oi-warning", $"File non supportato.Si accettano solo<strong>{string.Join(", ", allowedExtensions)}</strong>.");
+			return;
+		}
+
+		SetAlert("alert alert-info", "oi oi-info", $"<strong>{selectedFile.Name}</strong> ({selectedFile.Size} bytes) file selezionato.");
+		IsUploadDisabled = false;
+	}
+
+	private async Task OnSubmit()
+	{
+		if (product.Price > 0)
+		{
+			if (selectedFile != null)
+			{
+				if (product.Name.Trim().Length > 0)
+				{
+					if (product.Description.Trim().Length > 0)
+					{
+						var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
+						var x = await customAuthStateProvider.GetAuthenticationStateAsync();
+						var y = await dbService.GetUserByUsername(x.User.Identity.Name);
+						product.IDSeller = y.ID;
+						IsUploadDisabled = true;
+						Stream stream = selectedFile.OpenReadStream(maxFileSize);
+						var path = $"C:\\PhotoDatabase\\{Guid.NewGuid()}{Path.GetExtension(selectedFile.Name)}";
+						using FileStream fs = File.Create(path);
+
+						// Set buffer size to 512 KB.
+						int bufferSize = 512 * 1024;
+						byte[] buffer = System.Buffers.ArrayPool<byte>.Shared.Rent(bufferSize);
+						int bytesRead;
+						long totalBytesRead = 0;
+						long fileSize = selectedFile.Size;
+
+						// Use a timer to update the UI every few hundred milliseconds.
+						using var timer = new Timer(_ => InvokeAsync(() => StateHasChanged()));
+						timer.Change(TimeSpan.FromMilliseconds(500), TimeSpan.FromMilliseconds(500));
+
+						try
+						{
+							while ((bytesRead = await stream.ReadAsync(buffer)) != 0)
+							{
+								totalBytesRead += bytesRead;
+								ProgressPercentage = (int)(100 * totalBytesRead / fileSize);
+								await fs.WriteAsync(buffer, 0, bytesRead);
+							}
+						}
+						finally
+						{
+							System.Buffers.ArrayPool<byte>.Shared.Return(buffer);
+						}
+
+						// Stop the timer and update the UI with the final progress.
+						timer.Change(Timeout.Infinite, Timeout.Infinite);
+						ProgressPercentage = 100;
+						SetAlert("alert alert-success", "oi oi-check", $"<strong>{selectedFile.Name}</strong> ({selectedFile.Size} bytes) Prodotto caricato online.");
+						this.StateHasChanged();
+						product.ImagePath = path;
+						await dbService.AddNewProduct(product);
+						navManager.NavigateTo("/AddProduct", true);
+					}
+					else
+					{
+						await js.InvokeVoidAsync("alert", "DESCRIZIONE OBBLIGATORIA");
+					}
+				}
+				else
+				{
+					await js.InvokeVoidAsync("alert", "NOME OBBLIGATORIO");
+				}
+			}
+		}else
+		{
+			await js.InvokeVoidAsync("alert", "PREZZO NON VALIDO");
+
+		}
+	}
+
+	private void SetAlert(string alertClass, string iconClass, string message)
+	{
+		AlertClass = alertClass;
+		AlertMessage = new MarkupString($"<span class='{iconClass}' aria-hidden='true'></span> {message}");
+	}
+}

@@ -1,0 +1,39 @@
+﻿@page "/Products"
+@inject DBService productsService
+@inject NavigationManager navManager
+@using MAGestionale.Models
+@using MAGestionale.Security
+@using MAGestionale.Services
+@attribute [Authorize(Roles = "Admin,User,Seller")]
+
+<PageTitle>PRODOTTI</PageTitle>
+<CardDeck>
+    @foreach (Product p in products)
+    {
+        <Card>
+            <CardImage Source="@Tools.PathToURL(p.ImagePath)"></CardImage>
+            <CardBody>
+                <CardTitle Size="5">@p.Name.ToUpper()</CardTitle>
+                <CardText>
+                    @p.Description
+                </CardText>
+                <Button Color="Color.Primary" @onclick="()=>Detail(p)">Dettagli</Button>
+            </CardBody>
+        </Card>
+    }
+</CardDeck>
+@code
+{
+	List<Product> products = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		products = await productsService.GetAllProducts();
+	}
+
+	private async Task Detail(Product product)
+	{
+		navManager.NavigateTo($"/Details?IdProduct={product.ID}");
+	}
+
+}

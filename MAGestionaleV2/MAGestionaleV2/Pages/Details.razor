@@ -1,0 +1,97 @@
+﻿@page "/details"
+@page "/details/{idProduct}"
+@attribute [Authorize(Roles = "Admin,User,Seller")]
+@inject DBService dbService
+@inject IJSRuntime js
+@inject NavigationManager navManager
+@inject AuthenticationStateProvider authStateProvider
+@using MAGestionale.Authentication
+@using MAGestionale.Models
+@using MAGestionale.Security
+@using MAGestionale.Services
+
+<PageTitle>@product.Name</PageTitle>
+@if (alert)
+{
+	<div class="@AlertClass" role="alert">
+		@AlertMessage
+	</div>
+}
+<div class="d-flex justify-content-center">
+	<div class="card" style="width: 18rem;height: 30rem">
+	<img class="card-img-top" style="width:18rem;height:18rem" src="@Tools.PathToURL(product.ImagePath)" />
+			<strong>VENDITORE:</strong>
+			<a href="@path">@seller.Username</a>
+			<strong>NOME:</strong>
+			@product.Name
+		<strong>DESCRIZIONE:</strong>
+			@product.Description
+			<strong>PREZZO:</strong>
+			@String.Format("{0:0.00}", product.Price)€
+		@if (IsSamePerson)
+		{
+			<button class="btn btn-primary" disabled @onclick="() => Buy()">Acquista</button>
+		}
+		else
+		{
+			<button class="btn btn-primary" @onclick="Buy">Acquista</button>
+		}
+	</div>
+</div>
+@code
+{
+	[Parameter]
+	[SupplyParameterFromQuery(Name = nameof(IdProduct))]
+	public string IdProduct { get; set; }
+	Product product = new();
+	User seller = new();
+	string path = string.Empty;
+	User y = new();
+	bool IsSamePerson = false;
+	bool alert = false;
+	MarkupString AlertMessage = new MarkupString("<strong></strong>");
+	string AlertClass = "alert alert-info";
+	protected override async Task OnInitializedAsync()
+	{
+		product = await dbService.GetProductByID(long.Parse(IdProduct));
+		seller = await dbService.GetSellerByID(product.IDSeller);
+		path = $"/Showcase?IdSeller={seller.ID}";
+		var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
+		var x = await customAuthStateProvider.GetAuthenticationStateAsync();
+		y = await dbService.GetUserByUsername(x.User.Identity.Name);
+	}
+	private async Task Buy()
+	{
+		alert = true;
+		if (await dbService.NotBuyed(y.ID, product.ID))
+		{
+			if (y.ID != seller.ID)
+			{
+				BuyRequest buyRequest = new();
+				buyRequest.IDbuyer = y.ID;
+				buyRequest.IDproduct = product.ID;
+				buyRequest.Date = DateTime.Now;
+
+				await dbService.NewBuyRequest(buyRequest);
+				SetAlert("alert alert-danger", "oi oi-ban", $"<strong>Prodotto acquistato visualizzalo nella scheda i mei ordini</strong>");
+				Task.Delay(2000);
+				alert = false;
+				navManager.NavigateTo($"/Cart");
+				
+			}
+			else
+			{
+				SetAlert("alert alert-danger", "oi oi-ban", $"<strong>Non puoi acquistare un prodotto che hai messo in vendita</strong>");
+			}
+		}
+		else
+		{
+			SetAlert("alert alert-danger", "oi oi-ban", $"<strong>Non puoi acquistare un prodotto che hai già comprato</strong>");
+		}
+	}
+	private void SetAlert(string alertClass, string iconClass, string message)
+	{
+		AlertClass = alertClass;
+		AlertMessage = new MarkupString($"<span class='{iconClass}' aria-hidden='true'></span> {message}");
+	}
+}

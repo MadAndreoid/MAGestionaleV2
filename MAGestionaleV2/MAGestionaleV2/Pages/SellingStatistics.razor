@@ -1,0 +1,58 @@
+﻿@page "/SellingStatistics"
+@attribute [Authorize(Roles = "Admin,Seller")]
+@inject DBService dbService
+@inject IJSRuntime js
+@inject NavigationManager navManager
+@inject AuthenticationStateProvider authStateProvider
+@using MAGestionale.Authentication
+@using MAGestionale.Models
+@using MAGestionale.Security
+@using MAGestionale.Services
+
+<PageTitle>STATISTICHE</PageTitle>
+<div class="row">
+	@foreach (P p in products)
+	{
+
+		<div class="card" style="width: 12rem;height: 15rem">
+			<div class="card-body">
+				<img style="width: 7rem;height: 7rem" class="card-img-top" src="@Tools.PathToURL(p.ImagePath)" />
+				<h5 class="card-title">@p.Name.ToUpper()</h5>
+				<h6 class="card-subtitle mb-2 text-muted">Prezzo: @String.Format("{0:0.00}", p.Price)€</h6>
+				<p class="card-text">Vendite : @p.Requests</p>
+			</div>
+		</div>
+	}
+</div>
+
+@code
+{
+	class P : Product
+	{
+		public int Requests;
+	}
+	List<P> products = new();
+	List<BuyRequest> requests = new();
+	protected override async Task OnInitializedAsync()
+	{
+		var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
+		var x = await customAuthStateProvider.GetAuthenticationStateAsync();
+		var y = await dbService.GetUserByUsername(x.User.Identity.Name);
+		List<Product> p = await dbService.GetProductsBySeller(y.ID);
+		requests = await dbService.GetRequestBySeller(y.ID);
+		foreach (Product z in p)
+		{
+			products.Add(new P
+				{
+					ID = z.ID,
+					Name = z.Name,
+					Description = z.Description,
+					Price = z.Price,
+					ImagePath = z.ImagePath,
+					Requests = requests.Where(r => r.IDproduct == z.ID).Count()
+				});
+		}
+
+	}
+
+}

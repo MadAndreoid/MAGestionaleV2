@@ -1,0 +1,51 @@
+﻿@page "/Showcase"
+@page "/Showcase/{IdSeller}"
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager navManager
+@inject DBService dbService
+@using MAGestionale.Authentication
+@using MAGestionale.Models
+@using MAGestionale.Security
+@using MAGestionale.Services
+@attribute [Authorize(Roles = "Admin,User,Seller")]
+
+<PageTitle>I MIEI PRODOTTI</PageTitle>
+<div class="row">
+	@foreach (Product p in products)
+	{
+
+		<div class="card" style="width: 12rem;height: 17rem">
+			<div class="card-body">
+				<img style="width: 8rem;height: 8rem" class="card-img-top" src="@Tools.PathToURL(p.ImagePath)" />
+				<h5 class="card-title">@p.Name.ToUpper()</h5>
+				<h6 class="card-subtitle mb-2 text-muted">Prezzo: @String.Format("{0:0.00}", p.Price)€</h6>
+				@if (p.Description.Length < 20)
+				{
+					<p class="card-text">@p.Description</p>
+				}
+				else
+				{
+					<p class="card-text">@p.Description.Substring(0, Math.Min(p.Description.Length, 20))...</p>
+				}
+				<button class="btn btn-primary" @onclick="()=>Detail(p)">Dettagli</button>
+			</div>
+		</div>
+	}
+</div>
+@code
+{
+	List<Product> products = new();
+	[Parameter]
+	[SupplyParameterFromQuery(Name = nameof(IdSeller))]
+	public string IdSeller { get; set; }
+	protected override async Task OnInitializedAsync()
+	{
+		products = await dbService.GetProductsBySeller(long.Parse(IdSeller));
+
+	}
+	private async Task Detail(Product product)
+	{
+		navManager.NavigateTo($"/Details?IdProduct={product.ID}");
+	}
+
+}

@@ -1,0 +1,77 @@
+﻿@using Blazorise.Localization
+@using MAGestionale.Authentication
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager navManager
+
+<Bar @bind-Visible="@topbarVisible" Breakpoint="Breakpoint.Desktop" Background="Background.Primary" ThemeContrast="ThemeContrast.Light">
+    <BarBrand>
+    </BarBrand>
+    <BarToggler />
+    <BarMenu>
+        <BarStart>
+            <BarItem>
+                
+            </BarItem>
+        </BarStart>
+        <BarEnd>
+            <AuthorizeView>
+                <Authorized>
+                    <div class="p-2">
+                        @context.User.Identity.Name
+                    </div>
+                    <BarLink @onclick="Logout" href="javascript:void(0)">Logout</BarLink>
+
+                </Authorized>
+                <NotAuthorized>
+                    <a href="/">Login o Registrazione</a>
+                </NotAuthorized>
+            </AuthorizeView>
+        </BarEnd>
+    </BarMenu>
+</Bar>
+@code {
+    private async Task Logout()
+    {
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
+        await customAuthStateProvider.UpdateAuthenticationState(null);
+        navManager.NavigateTo("/", true);
+
+    }
+    protected override async Task OnInitializedAsync()
+    {
+       //await SelectCulture( "en-US" );
+        await base.OnInitializedAsync();
+    }
+
+    // Task SelectCulture( string name )
+    // {
+    //     LocalizationService!.ChangeLanguage( name );
+
+    //     return Task.CompletedTask;
+    // }
+
+    private bool topbarVisible = true;
+
+    // Task OnLayoutTypeChecked( string layoutType )
+    // {
+    //     LayoutType = layoutType;
+
+    //     return LayoutTypeChanged.InvokeAsync( layoutType );
+    // }
+
+    [Parameter] public EventCallback<bool> ThemeEnabledChanged { get; set; }
+
+    [Parameter] public EventCallback<bool> ThemeGradientChanged { get; set; }
+
+    [Parameter] public EventCallback<bool> ThemeRoundedChanged { get; set; }
+
+    [Parameter] public EventCallback<string> ThemeColorChanged { get; set; }
+
+    [Parameter] public string? LayoutType { get; set; }
+
+    [Parameter] public EventCallback<string> LayoutTypeChanged { get; set; }
+
+    [Inject] protected ITextLocalizerService? LocalizationService { get; set; }
+
+    [CascadingParameter] protected Theme? Theme { get; set; }
+}
