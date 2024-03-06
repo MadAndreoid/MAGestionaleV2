@@ -9,8 +9,8 @@
 @using MAGestionale.Services
 <PageTitle>I MIEI ORDINI</PageTitle>
 <CardDeck>
-    @foreach (Product p in products)
-    {
+	@foreach (Product p in products)
+	{
         <Card>
             <CardImage Height=Height.Is50 Width=Width.Is100 Source="@Tools.PathToURL(p.ImagePath)"></CardImage>
             <CardBody>
@@ -21,7 +21,7 @@
                 <Button Color="Color.Primary" @onclick="()=>Detail(p)">Dettagli</Button>
             </CardBody>
         </Card>
-    }
+	}
 </CardDeck>
 @code
 {
