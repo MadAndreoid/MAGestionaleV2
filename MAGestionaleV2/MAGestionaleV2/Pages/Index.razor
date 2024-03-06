@@ -1,8 +1,8 @@
 ﻿@page "/"
-@using MAGestionale.Authentication
+@using MAGestionaleV2.Authentication
 @using MAGestionaleV2.Models
-@using MAGestionale.Security
-@using MAGestionale.Services
+@using MAGestionaleV2.Security
+@using MAGestionaleV2.Services
 @inject DBService userService
 @inject IJSRuntime js
 @inject AuthenticationStateProvider authStateProvider
@@ -27,7 +27,7 @@
 					<div class="row gx-lg-5 align-items-center">
 						<div class="col-lg-6 mb-5 mb-lg-0">
 							<h1 class="my-5 display-3 fw-bold ls-tight">
-								Il migliore sito<br />
+								Il miglior sito<br />
 								<span class="text-primary">per il tuo business</span>
 							</h1>
 							<p style="color: hsl(217, 10%, 50.8%)">
@@ -131,6 +131,7 @@
 				{
 					if (!userAccount.IsBlocked)
 					{
+						SetAlert("alert alert-success", "oi oi-check","<strong>LOGIN EFFETTUATO</strong>");
 						var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
 						await customAuthStateProvider.UpdateAuthenticationState(new UserSession
 							{

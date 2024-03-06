@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using System.Security.Claims;
 
-namespace MAGestionale.Authentication
+namespace MAGestionaleV2.Authentication
 {
 	public class CustomAuthenticationStateProvider : AuthenticationStateProvider
 	{

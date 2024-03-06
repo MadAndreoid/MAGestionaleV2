@@ -5,10 +5,10 @@
 @inject NavigationManager navManager
 @inject AuthenticationStateProvider authStateProvider
 @inject IWebHostEnvironment env
-@using MAGestionale.Authentication
+@using MAGestionaleV2.Authentication
 @using MAGestionaleV2.Models
-@using MAGestionale.Security
-@using MAGestionale.Services
+@using MAGestionaleV2.Security
+@using MAGestionaleV2.Services
 @using Microsoft.EntityFrameworkCore
 @using System.Security.Claims
 
@@ -36,7 +36,14 @@
 			<input type="number" class="form-control" @bind="product.Price" required></input>
 		</div>
 		<div class="input-group mb-3 p">
-			<InputFile @key=@(inputFileId) class="form-control" id="inputFile" OnChange="OnInputFileChange" aria-describedby="uploadButton" required />
+			@if (inputEnable)
+			{
+				<InputFile  @key=@(inputFileId) class="form-control" id="inputFile" OnChange="OnInputFileChange" aria-describedby="uploadButton" required />
+			}
+			else
+			{
+				<InputFile disabled @key=@(inputFileId) class="form-control" id="inputFile" OnChange="OnInputFileChange" aria-describedby="uploadButton" required />
+			}
 			<button class="btn btn-primary" type="submit" id="uploadButton" @onclick="OnSubmit" disabled="@IsUploadDisabled">
 				<span class="oi oi-cloud-upload" aria-hidden="true"></span> Carica Immagine
 			</button>
@@ -57,6 +64,7 @@
 	string[] allowedExtensions = { ".png", ".jpeg", ".gif", ".jpg" };
 	bool IsUploadDisabled = true;
 	private Guid inputFileId = Guid.NewGuid();
+	bool inputEnable = true;
 
 	bool validfile = false;
 	Product product = new();
@@ -98,6 +106,7 @@
 				{
 					if (product.Description.Trim().Length > 0)
 					{
+						inputEnable = false;
 						var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
 						var x = await customAuthStateProvider.GetAuthenticationStateAsync();
 						var y = await dbService.GetUserByUsername(x.User.Identity.Name);
@@ -139,22 +148,21 @@
 						this.StateHasChanged();
 						product.ImagePath = path;
 						await dbService.AddNewProduct(product);
-						navManager.NavigateTo("/AddProduct", true);
+
 					}
 					else
 					{
-						await js.InvokeVoidAsync("alert", "DESCRIZIONE OBBLIGATORIA");
+						SetAlert("alert alert-danger", "oi oi-warning", $"<strong>DESCRIZIONE</strong> obbligatoria");
 					}
 				}
 				else
 				{
-					await js.InvokeVoidAsync("alert", "NOME OBBLIGATORIO");
+					SetAlert("alert alert-danger", "oi oi-warning", $"<strong>NOME</strong> obbligatorio");
 				}
 			}
 		}else
 		{
-			await js.InvokeVoidAsync("alert", "PREZZO NON VALIDO");
-
+			SetAlert("alert alert-danger", "oi oi-warning", $"<strong>PREZZO</strong> non valido");
 		}
 	}
 

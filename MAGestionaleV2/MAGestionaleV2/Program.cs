@@ -1,9 +1,9 @@
 using Blazorise;
 using Blazorise.Bootstrap;
 using Blazorise.Icons.FontAwesome;
-using MAGestionale.Authentication;
+using MAGestionaleV2.Authentication;
 using MAGestionaleV2.Models;
-using MAGestionale.Services;
+using MAGestionaleV2.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.EntityFrameworkCore;

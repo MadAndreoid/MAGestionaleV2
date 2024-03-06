@@ -3,35 +3,47 @@
 @inject AuthenticationStateProvider authStateProvider
 @inject NavigationManager navManager
 @inject DBService dbService
-@using MAGestionale.Authentication
+@using MAGestionaleV2.Authentication
 @using MAGestionaleV2.Models
-@using MAGestionale.Security
-@using MAGestionale.Services
+@using MAGestionaleV2.Security
+@using MAGestionaleV2.Services
 <PageTitle>I MIEI ORDINI</PageTitle>
-<CardDeck>
-	@foreach (Product p in products)
-	{
-        <Card>
-            <CardImage Height=Height.Is50 Width=Width.Is100 Source="@Tools.PathToURL(p.ImagePath)"></CardImage>
-            <CardBody>
-                <CardTitle Size="5">@p.Name.ToUpper()</CardTitle>
-                <CardText>
-                    @p.Description
-                </CardText>
-                <Button Color="Color.Primary" @onclick="()=>Detail(p)">Dettagli</Button>
-            </CardBody>
-        </Card>
-	}
-</CardDeck>
+@foreach (List<Product> prodList in products)
+{
+	<CardDeck>
+		@foreach (Product p in prodList)
+		{
+			<Card>
+				<CardImage Height=Height.Is50 Width=Width.Is100 Source="@Tools.PathToURL(p.ImagePath)"></CardImage>
+				<CardBody>
+					<CardTitle Size="5">@p.Name.ToUpper()</CardTitle>
+						<CardText>
+							@p.Description
+					</CardText>
+					<Button Color="Color.Primary" @onclick="()=>Detail(p)">Dettagli</Button>
+				</CardBody>
+			</Card>
+		}
+	</CardDeck>
+}
 @code
 {
-	List<Product> products = new();
+	List<List<Product>> products = new();
 	protected override async Task OnInitializedAsync()
 	{
 		var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
 		var x = await customAuthStateProvider.GetAuthenticationStateAsync();
 		var y = await dbService.GetUserByUsername(x.User.Identity.Name);
-		products = await dbService.GetProductsByBuyer((y.ID));
+		var prod = await dbService.GetProductsByBuyer((y.ID));
+
+		for (int i = 0; i < prod.Count; i += 4)
+		{
+
+			List<Product> subList = prod.GetRange(i, Math.Min(4, prod.Count - i));
+			products.Add(subList);
+
+		}
+		products = products.OrderBy(list => list.Count).ToList();
 	}
 	private async Task Detail(Product product)
 	{

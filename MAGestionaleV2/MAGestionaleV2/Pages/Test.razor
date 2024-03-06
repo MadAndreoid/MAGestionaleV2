@@ -1,0 +1,29 @@
+﻿@page "/queryparam"
+@using Microsoft.AspNetCore.WebUtilities
+@inject NavigationManager navManager
+
+<h3>Query Paramter Demo</h3>
+
+<button @onclick="Navigate">Click</button>
+
+<div>Id = @Id</div>
+
+@code {
+
+
+	string Id { get; set; }
+
+	void Navigate()
+	{
+		var query = new Dictionary<string, string> { { "Id", "1001" } };
+
+		navManager.NavigateTo(QueryHelpers.AddQueryString(navManager.Uri, query));
+
+		var uri = navManager.ToAbsoluteUri(navManager.Uri);
+
+		QueryHelpers.ParseQuery(navManager.ToAbsoluteUri(navManager.Uri).Query).TryGetValue("idSeller", out var param);
+
+		int x = 01;
+
+	}
+}

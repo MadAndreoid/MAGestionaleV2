@@ -1,14 +1,14 @@
 ﻿@page "/details"
-@page "/details/{idProduct}"
 @attribute [Authorize(Roles = "Admin,User,Seller")]
 @inject DBService dbService
 @inject IJSRuntime js
 @inject NavigationManager navManager
 @inject AuthenticationStateProvider authStateProvider
-@using MAGestionale.Authentication
+@using MAGestionaleV2.Authentication
 @using MAGestionaleV2.Models
-@using MAGestionale.Security
-@using MAGestionale.Services
+@using MAGestionaleV2.Security
+@using MAGestionaleV2.Services
+@using Microsoft.AspNetCore.WebUtilities
 @if (product.IsVisible)
 {
 <PageTitle>@product.Name</PageTitle>
@@ -48,9 +48,8 @@ else
 }
 @code
 {
-	[Parameter]
-	[SupplyParameterFromQuery(Name = nameof(IdProduct))]
-	public string IdProduct { get; set; }
+
+
 	Product product = new();
 	User seller = new();
 	string path = string.Empty;
@@ -61,9 +60,10 @@ else
 	string AlertClass = "alert alert-info";
 	protected override async Task OnInitializedAsync()
 	{
-		product = await dbService.GetProductByID(long.Parse(IdProduct));
+		QueryHelpers.ParseQuery(navManager.ToAbsoluteUri(navManager.Uri).Query).TryGetValue("idProduct", out var param);
+		product = await dbService.GetProductByID(long.Parse(param.First()));
 		seller = await dbService.GetSellerByID(product.IDSeller);
-		path = $"/Showcase?IdSeller={seller.ID}";
+		path = $"/Showcase?idSeller={seller.ID}";
 		var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
 		var x = await customAuthStateProvider.GetAuthenticationStateAsync();
 		y = await dbService.GetUserByUsername(x.User.Identity.Name);
@@ -101,5 +101,9 @@ else
 	{
 		AlertClass = alertClass;
 		AlertMessage = new MarkupString($"<span class='{iconClass}' aria-hidden='true'></span> {message}");
+	}
+	private async Task Showcase()
+	{
+		navManager.NavigateTo($"/Showcase?IdSeller={product.IDSeller}");
 	}
 }

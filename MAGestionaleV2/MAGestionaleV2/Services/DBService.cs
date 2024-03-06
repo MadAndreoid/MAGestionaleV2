@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics.Eventing.Reader;
 
-namespace MAGestionale.Services
+namespace MAGestionaleV2.Services
 {
 	public class DBService
 	{

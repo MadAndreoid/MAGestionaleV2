@@ -1,4 +1,4 @@
-﻿namespace MAGestionale.Authentication
+﻿namespace MAGestionaleV2.Authentication
 {
 	public class UserSession
 	{

@@ -1,73 +1,56 @@
 ﻿@page "/Products"
-@inject DBService productsService
+@inject DBService dbService
 @inject NavigationManager navManager
 @using MAGestionaleV2.Models
-@using MAGestionale.Security
-@using MAGestionale.Services
+@using MAGestionaleV2.Security
+@using MAGestionaleV2.Services
 @using MAGestionaleV2.Models
 @attribute [Authorize(Roles = "Admin,User,Seller")]
 
 <PageTitle>PRODOTTI</PageTitle>
-<CardDeck>
-    @foreach (Product p in products)
-    {
-        if (p.IsVisible)
-        {
-        <Card>
-                <CardImage Height=Height.Is50 Width=Width.Is100 Source="@Tools.PathToURL(p.ImagePath)"></CardImage>
-                <CardBody>
-                    <CardTitle Size="5">@p.Name.ToUpper()</CardTitle>
-                    <CardText>
-                        @p.Description
-                    </CardText>
-                    <Button Color="Color.Primary" @onclick="()=>Detail(p)">Dettagli</Button>
-                </CardBody>
-            </Card>
-            <Card>
-                <CardImage Height=Height.Is50 Width=Width.Is100 Source="@Tools.PathToURL(p.ImagePath)"></CardImage>
-                <CardBody>
-                    <CardTitle Size="5">@p.Name.ToUpper()</CardTitle>
-                    <CardText>
-                        @p.Description
-                    </CardText>
-                    <Button Color="Color.Primary" @onclick="()=>Detail(p)">Dettagli</Button>
-                </CardBody>
-            </Card>
-            <Card>
-                <CardImage Height=Height.Is50 Width=Width.Is100 Source="@Tools.PathToURL(p.ImagePath)"></CardImage>
-                <CardBody>
-                    <CardTitle Size="5">@p.Name.ToUpper()</CardTitle>
-                    <CardText>
-                        @p.Description
-                    </CardText>
-                    <Button Color="Color.Primary" @onclick="()=>Detail(p)">Dettagli</Button>
-                </CardBody>
-            </Card>
-            <Card>
-                <CardImage Height=Height.Is50 Width=Width.Is100 Source="@Tools.PathToURL(p.ImagePath)"></CardImage>
-            <CardBody>
-                <CardTitle Size="5">@p.Name.ToUpper()</CardTitle>
-                <CardText>
-                    @p.Description
-                </CardText>
-                <Button Color="Color.Primary" @onclick="()=>Detail(p)">Dettagli</Button>
-            </CardBody>
-        </Card>
-    }
-    }
-</CardDeck>
+@foreach (List<Product> prodList in products)
+{
+	<CardDeck>
+		@foreach (Product p in prodList)
+		{
+			if (p.IsVisible)
+			{
+				<Card>
+					<CardImage Height=Height.Is50 Width=Width.Is100 Source="@Tools.PathToURL(p.ImagePath)"></CardImage>
+					<CardBody>
+						<CardTitle Size="5">@p.Name.ToUpper()</CardTitle>
+							<CardText>
+								@p.Description
+						</CardText>
+						<Button Color="Color.Primary" @onclick="()=>Detail(p)">Dettagli</Button>
+					</CardBody>
+				</Card>
+			}
+		}
+	</CardDeck>
+
+}
 @code
 {
-	List<Product> products = new();
+	List<List<Product>> products = new();
 
 	protected override async Task OnInitializedAsync()
 	{
-		products = await productsService.GetAllProducts();
+		var prod = await dbService.GetAllProducts();
+
+		for (int i = 0; i < prod.Count; i += 4)
+		{
+			
+			List<Product> subList = prod.GetRange(i, Math.Min(4, prod.Count - i)); 
+			products.Add(subList);
+
+		}
+		products = products.OrderBy(list => list.Count).ToList();
 	}
+
 
 	private async Task Detail(Product product)
 	{
 		navManager.NavigateTo($"/Details?IdProduct={product.ID}");
 	}
-
 }

@@ -1,6 +1,6 @@
 ﻿@page "/UserList"
 @using MAGestionaleV2.Models
-@using MAGestionale.Services
+@using MAGestionaleV2.Services
 @attribute [Authorize(Roles = "Admin")]
 @inject DBService userService
 <PageTitle>LISTA UTENTI</PageTitle>
@@ -10,7 +10,7 @@
 		<th scope="col">Email</th>
 		<th scope="col">Nome</th>
 		<th scope="col">Cognome</th>
-		<th scope="col">Azioni</th>
+		<th scope="col"><Div TextAlignment="TextAlignment.Center">Azioni</Div></th>
 	</tr>
 	@if (users is not null)
 	{
@@ -22,24 +22,26 @@
 				<td>@u.Name</td>
 				<td>@u.Surname</td>
 				<td>
-					<div class="btn-group btn-group-toggle" data-toggle="buttons">
-						@if (u.IsBlocked)
-						{
-							<button type="radio" style="width:10rem" class="btn-danger" @onclick="() => userService.UnblockUser(u)">Sblocca Utente</button>
-						}
-						else
-						{
-							<button type="radio" style="width:10rem" class="btn-danger" @onclick="() => userService.BlockUser(u)">Blocca Utente</button>
-						}
-						@if (u.Role == "User")
-						{
-							<button type="radio" style="width:10rem" class="btn-success" @onclick="() => userService.SetSeller(u)">Rendi Venditore</button>
-						}
-						else
-						{
-							<button type="radio" style="width:10rem" class="btn-success" @onclick="() => userService.SetUser(u)">Rendi Utente</button>
-						}
-					</div>
+					<Div TextAlignment="TextAlignment.Center">
+						<div class="btn-group btn-group-toggle" data-toggle="buttons">
+							@if (u.IsBlocked)
+							{
+								<button type="radio" style="width:10rem" class="btn-danger" @onclick="() => userService.UnblockUser(u)">Sblocca Utente</button>
+							}
+							else
+							{
+								<button type="radio" style="width:10rem" class="btn-danger" @onclick="() => userService.BlockUser(u)">Blocca Utente</button>
+							}
+							@if (u.Role == "User")
+							{
+								<button type="radio" style="width:10rem" class="btn-success" @onclick="() => userService.SetSeller(u)">Rendi Venditore</button>
+							}
+							else
+							{
+								<button type="radio" style="width:10rem" class="btn-success" @onclick="() => userService.SetUser(u)">Rendi Utente</button>
+							}
+						</div>
+					</Div>
 				</td>
 			</tr>
 

@@ -1,4 +1,4 @@
-﻿using MAGestionale.Services;
+﻿using MAGestionaleV2.Services;
 using System.Runtime.Intrinsics.Arm;
 using System.Security.Cryptography;
 using System.Text;
@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using static System.Net.Mime.MediaTypeNames;
 
 
-namespace MAGestionale.Security;
+namespace MAGestionaleV2.Security;
 
 public static class Tools
 {

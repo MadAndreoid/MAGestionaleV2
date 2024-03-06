@@ -4,61 +4,71 @@
 @inject IJSRuntime js
 @inject NavigationManager navManager
 @inject AuthenticationStateProvider authStateProvider
-@using MAGestionale.Authentication
+@using MAGestionaleV2.Authentication
 @using MAGestionaleV2.Models
-@using MAGestionale.Security
-@using MAGestionale.Services
+@using MAGestionaleV2.Security
+@using MAGestionaleV2.Services
 
 <PageTitle>STATISTICHE</PageTitle>
-<CardDeck>
-    @foreach (ProductAndRequest p in products)
-	{
-        @if (p.product.IsVisible)
-        {
-            <Card>
-                <CardImage Height=Height.Is50 Width=Width.Is100 Source="@Tools.PathToURL(p.product.ImagePath)"></CardImage>
-                <CardBody>
-                    <CardTitle Size="5">@p.product.Name.ToUpper()</CardTitle>
-                    <CardText>
-                        @p.product.Description
-                    </CardText>
-                    <CardText>@p.Requests</CardText>
-                    <Button @onclick="()=>Remove(p)">Remove</Button>
-                </CardBody>
-            </Card>
-        }
-	}
-</CardDeck>
-
+@foreach (List<ProductAndRequest> ListProductAndRequest in productsAndRequests)
+{
+	<CardDeck Padding="Padding.Is2">
+		@foreach (ProductAndRequest p in ListProductAndRequest)
+		{
+			@if (p.product.IsVisible)
+			{
+				<Card>
+					<CardImage Height=Height.Is50 Width=Width.Is100 Source="@Tools.PathToURL(p.product.ImagePath)"></CardImage>
+					<CardBody>
+						<CardTitle Size="5">@p.product.Name.ToUpper()</CardTitle>
+						<CardText>@p.product.Description.Substring(0, Math.Min(p.product.Description.Length, 25))</CardText>
+						<CardText>Vendite : @p.Requests</CardText>
+						<Button Color="Color.Danger" @onclick="()=>Remove(p)">Remove</Button>
+						</CardBody>
+					</Card>
+			}
+		}
+	</CardDeck>
+}
 @code
 {
-    class ProductAndRequest
+	class ProductAndRequest
 	{
 		public int Requests;
-        public Product product;
+		public Product product;
 	}
-    List<ProductAndRequest> products = new();
+	List<List<ProductAndRequest>> productsAndRequests = new();
+
 	List<BuyRequest> requests = new();
 	protected override async Task OnInitializedAsync()
 	{
 		var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
 		var x = await customAuthStateProvider.GetAuthenticationStateAsync();
 		var y = await dbService.GetUserByUsername(x.User.Identity.Name);
-		List<Product> p = await dbService.GetProductsBySeller(y.ID);
+		List<Product> products = await dbService.GetProductsBySeller(y.ID);
 		requests = await dbService.GetRequestBySeller(y.ID);
-		foreach (Product z in p)
+
+		for (int i = 0; i < products.Count; i += 4)
 		{
-            products.Add(new ProductAndRequest
-				{
-                    product = z,
-                    Requests = requests.Where(r => r.IDproduct == z.ID).Count(),
-				});
+
+			List<Product> subList = products.GetRange(i, Math.Min(4, products.Count - i));
+			List<ProductAndRequest> pAndr = new();
+			foreach (Product p in subList)
+			{
+				pAndr.Add(new ProductAndRequest
+					{
+						product = p,
+						Requests = requests.Where(r => r.IDproduct == p.ID).Count(),
+					});
+			}
+			productsAndRequests.Add(pAndr);
 		}
+		productsAndRequests = productsAndRequests.OrderBy(list => list.Count).ToList();
 
 	}
-    async Task Remove(ProductAndRequest product)
-    {
-        products.Remove(product);
-        await dbService.RemoveProduct(product.product);
-    }
+	async Task Remove(ProductAndRequest prod)
+	{
+		await dbService.RemoveProduct(prod.product);
+		navManager.NavigateTo("/SellingStatistics");
+	}
 }

@@ -1,41 +1,57 @@
 ﻿@page "/Showcase"
-@page "/Showcase/{IdSeller}"
+@attribute [Authorize(Roles = "Admin,User,Seller")]
 @inject AuthenticationStateProvider authStateProvider
 @inject NavigationManager navManager
 @inject DBService dbService
-@using MAGestionale.Authentication
-@using MAGestionale.Models
-@using MAGestionale.Security
-@using MAGestionale.Services
+@using MAGestionaleV2.Authentication
 @using MAGestionaleV2.Models
-@attribute [Authorize(Roles = "Admin,User,Seller")]
+@using MAGestionaleV2.Security
+@using MAGestionaleV2.Services
+@using MAGestionaleV2.Models
+@using Microsoft.AspNetCore.WebUtilities
+
 
 <PageTitle>I MIEI PRODOTTI</PageTitle>
-<CardDeck>
-	@foreach (Product p in products)
-	{
-        <Card>
-            <CardImage Height=Height.Is50 Width=Width.Is75 Source="@Tools.PathToURL(p.ImagePath)"></CardImage>
-            <CardBody>
-                <CardTitle Size="5">@p.Name.ToUpper()</CardTitle>
-                <CardText>
-                    @p.Description
-                </CardText>
-                <Button Color="Color.Primary" @onclick="()=>Detail(p)">Dettagli</Button>
-            </CardBody>
-        </Card>
-	}
-</CardDeck>
+<h1>@x</h1>
+@foreach (List<Product> prodList in products)
+{
+	<CardDeck>
+		@foreach (Product p in prodList)
+		{
+			@if (p.IsVisible)
+			{
+				<Card>
+					<CardImage Height=Height.Is50 Width=Width.Is100 Source="@Tools.PathToURL(p.ImagePath)"></CardImage>
+					<CardBody>
+						<CardTitle Size="5">@p.Name.ToUpper()</CardTitle>
+							<CardText>
+								@p.Description
+						</CardText>
+						<Button Color="Color.Primary" @onclick="()=>Detail(p)">Dettagli</Button>
+					</CardBody>
+				</Card>
+			}
+		}
+	</CardDeck>
+}
 @code
 {
-	List<Product> products = new();
-	[Parameter]
-	[SupplyParameterFromQuery(Name = nameof(IdSeller))]
-	public string IdSeller { get; set; }
+	List<List<Product>> products = new();
+	string x = string.Empty;
 	protected override async Task OnInitializedAsync()
 	{
-		products = await dbService.GetProductsBySeller(long.Parse(IdSeller));
+		QueryHelpers.ParseQuery(navManager.ToAbsoluteUri(navManager.Uri).Query).TryGetValue("idSeller", out var param);
 
+		var prod = await dbService.GetProductsBySeller(Int64.Parse(param.First()));
+
+		for (int i = 0; i < prod.Count; i += 4)
+		{
+
+			List<Product> subList = prod.GetRange(i, Math.Min(4, prod.Count - i));
+			products.Add(subList);
+
+		}
+		products = products.OrderBy(list => list.Count).ToList();
 	}
 	private async Task Detail(Product product)
 	{
